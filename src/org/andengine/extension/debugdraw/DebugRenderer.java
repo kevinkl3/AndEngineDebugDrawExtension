@@ -220,16 +220,21 @@ public class DebugRenderer extends Entity {
 				IRenderOfFixture renderOfFixture;
 				if (fixture.getShape().getType() == Type.Circle) {
 					renderOfFixture = new RenderOfCircleFixture(fixture, pVBO);
-				} else {
-					renderOfFixture = new RenderOfPolyFixture(fixture, pVBO);
 				}
+				//
+		                // OzLark: Added the following condition for edge shapes
+		                //
+		                else if (fixture.getShape().getType() == Type.Edge) {
+		                        renderOfFixture = new RenderOfEdgeFixture(fixture, pVBO);
+		                } else {
+		                        renderOfFixture = new RenderOfPolyFixture(fixture, pVBO);
+		                }
 
 				updateColor();
 				mRenderFixtures.add(renderOfFixture);
 				this.attachChild(renderOfFixture.getEntity());
 			}
-		}
-
+		}		
 		public void updateColor() {
 			for (IRenderOfFixture renderOfFix : mRenderFixtures) {
 				renderOfFix.getEntity().setColor(fixtureToColor(renderOfFix.getFixture()));
@@ -251,5 +256,33 @@ public class DebugRenderer extends Entity {
 
 	public void setDrawBodies(boolean mDrawBodies) {
 		this.mDrawBodies = mDrawBodies;
+	}
+	/**
+	 * Polygonal fixture representation
+	 * @author OzLark
+	 */
+	private static class RenderOfEdgeFixture extends RenderOfFixture {
+		public RenderOfEdgeFixture(Fixture fixture, VertexBufferObjectManager pVBO) {
+			super(fixture);
+
+			EdgeShape fixtureShape = (EdgeShape) fixture.getShape();
+			
+			float[] xPoints = new float[2];
+			float[] yPoints = new float[2];
+
+			Vector2 vertex = Vector2Pool.obtain();
+
+			fixtureShape.getVertex1(vertex);
+			xPoints[0] = vertex.x * PhysicsConnector.PIXEL_TO_METER_RATIO_DEFAULT;
+			yPoints[0] = vertex.y * PhysicsConnector.PIXEL_TO_METER_RATIO_DEFAULT;
+
+			fixtureShape.getVertex2(vertex);
+			xPoints[1] = vertex.x * PhysicsConnector.PIXEL_TO_METER_RATIO_DEFAULT;
+			yPoints[1] = vertex.y * PhysicsConnector.PIXEL_TO_METER_RATIO_DEFAULT;
+
+			Vector2Pool.recycle(vertex);
+
+			mEntity = new PolyLine(0, 0, xPoints, yPoints, pVBO);
+		}
 	}
 }
